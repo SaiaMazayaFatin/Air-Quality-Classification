@@ -102,6 +102,9 @@ Dataset yang digunakan berisi 5000 sampel dan mencakup berbagai faktor lingkunga
   - Random Forest: **n_estimators**, **max_depth**, **min_samples_split**, **min_samples_leaf**, dan **max_features**.
   - XGBoost: **n_estimators**, **learning_rate**, **max_depth**, **subsample**, **colsample_bytree**, **reg_alpha**, dan **reg_lambda**.
 
+### **Rekomendasi**
+Gunakan **XGBoost** untuk prediksi kualitas udara karena performanya yang lebih tinggi pada data pengujian dan kemampuannya menangani kelas minoritas dengan baik.
+
 ---
 
 ## **Evaluation**
@@ -158,5 +161,3 @@ Dataset yang digunakan berisi 5000 sampel dan mencakup berbagai faktor lingkunga
 - **Random Forest** memberikan hasil yang stabil dan cocok untuk baseline model.
 - **XGBoost** unggul dalam memaksimalkan F1-Score, terutama untuk kelas minoritas, menjadikannya pilihan terbaik untuk dataset ini.
 
-### **Rekomendasi**
-Gunakan **XGBoost** untuk prediksi kualitas udara karena performanya yang lebih tinggi pada data pengujian dan kemampuannya menangani kelas minoritas dengan baik.
