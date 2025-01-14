@@ -73,37 +73,107 @@ Dataset yang digunakan berisi 5000 sampel dan mencakup berbagai faktor lingkunga
 
 ---
 
-## **Data Preparation**
+## Data Preparation
 
-### **Langkah Data Preparation**
-1. **Handling Missing Values**: Tidak ada nilai hilang dalam dataset.
-2. **Handling Multicollinearity**: Menggunakan analisis korelasi untuk memahami hubungan antar fitur.
-3. **Scaling Data**: Tidak diperlukan scaling karena algoritma tree-based seperti Random Forest dan XGBoost tidak sensitif terhadap skala data.
-4. **Balancing Data**: Menggunakan **SMOTE** untuk menangani ketidakseimbangan kelas.
-5. **Encoding Target Variable**: Menggunakan **LabelEncoder** untuk mengubah target variabel menjadi format numerik.
+### Langkah Data Preparation
 
-**Alasan**:
-- Teknik-teknik di atas membantu meningkatkan akurasi model dan mencegah bias terhadap kelas mayoritas.
+1. **Split Data**  
+   Data dibagi menjadi **X** (fitur) dan **y** (target). Kemudian dilakukan pembagian data menjadi **training** dan **testing set** menggunakan `train_test_split` dengan rasio 80:20.  
+   **Alasan**:
+   - Memastikan evaluasi model dilakukan pada data yang tidak terlihat selama pelatihan.
+   - Rasio 80:20 adalah standar umum untuk menjaga keseimbangan antara data pelatihan dan pengujian.
+
+2. **Encoding Target Variable**  
+   Menggunakan **LabelEncoder** untuk mengubah variabel target `Air Quality` ke format numerik yang dapat dimengerti oleh model.  
+   **Alasan**:
+   - Model Machine Learning hanya dapat bekerja dengan data numerik.
+
+3. **Handling Class Imbalance**  
+   Data pelatihan diseimbangkan menggunakan **SMOTE (Synthetic Minority Oversampling Technique)**.  
+   **Alasan**:
+   - Untuk mencegah model bias terhadap kelas mayoritas. Teknik ini mensintesis data baru untuk kelas minoritas agar proporsi antar kelas lebih seimbang.
+
+4. **Scaling Data**  
+   Tidak dilakukan scaling karena algoritma **tree-based** seperti Random Forest dan XGBoost tidak sensitif terhadap skala data.  
+   **Alasan**:
+   - Efisiensi waktu dan kesesuaian dengan algoritma yang digunakan.
+
+5. **Handling Multicollinearity**  
+   Tidak dilakukan karena algoritma **tree-based** mampu menangani multikolinearitas secara internal. Namun, korelasi antar fitur dianalisis untuk informasi tambahan.
 
 ---
 
-## **Modeling**
+## Model Development
 
-### **Model yang Digunakan**
-1. **Random Forest**:
-   - **Kelebihan**: Stabil, tidak mudah overfit, dan bekerja dengan baik pada dataset dengan fitur yang banyak.
-   - **Kekurangan**: Performa bisa lebih rendah dibandingkan XGBoost pada dataset kompleks.
-2. **XGBoost**:
-   - **Kelebihan**: Kemampuan boosting iteratif membuatnya unggul dalam menangani dataset kompleks dan ketidakseimbangan kelas.
-   - **Kekurangan**: Lebih rentan overfit tanpa regularisasi yang tepat.
+## Model 1: Random Forest
 
-### **Improvement dengan Hyperparameter Tuning**
-- **Optuna** digunakan untuk mengoptimalkan parameter seperti:
-  - Random Forest: **n_estimators**, **max_depth**, **min_samples_split**, **min_samples_leaf**, dan **max_features**.
-  - XGBoost: **n_estimators**, **learning_rate**, **max_depth**, **subsample**, **colsample_bytree**, **reg_alpha**, dan **reg_lambda**.
+### Cara Kerja
 
-### **Rekomendasi**
-Gunakan **XGBoost** untuk prediksi kualitas udara karena performanya yang lebih tinggi pada data pengujian dan kemampuannya menangani kelas minoritas dengan baik.
+Random Forest adalah algoritma ensemble berbasis pohon keputusan yang membangun beberapa pohon keputusan secara acak dan menggabungkan hasilnya.  
+**Langkah Kerja**:
+1. Membagi data pelatihan secara acak ke dalam subset untuk membangun beberapa pohon keputusan.
+2. Setiap pohon dilatih menggunakan subset data yang berbeda.
+3. Untuk prediksi akhir, model mengambil rata-rata (regresi) atau melakukan voting (klasifikasi) dari semua pohon.
+
+### Parameter
+
+- **`n_estimators`**: Jumlah pohon dalam hutan (dioptimalkan dengan Optuna).
+- **`max_depth`**: Kedalaman maksimum pohon (dioptimalkan dengan Optuna).
+- **`min_samples_split`**: Jumlah minimum sampel yang diperlukan untuk membagi node (dioptimalkan dengan Optuna).
+- **`min_samples_leaf`**: Jumlah minimum sampel pada setiap leaf node (dioptimalkan dengan Optuna).
+- **`max_features`**: Jumlah maksimum fitur yang dipertimbangkan untuk pembagian di setiap node.
+
+**Catatan**: Parameter lainnya menggunakan **default**.
+
+### Kelebihan:
+- Tidak mudah overfit karena rata-rata prediksi dari banyak pohon.
+- Dapat menangani data dengan banyak fitur tanpa scaling.
+
+### Kekurangan:
+- Relatif lebih lambat dibanding algoritma sederhana.
+- Tidak selalu memberikan performa terbaik pada dataset kompleks dibandingkan XGBoost.
+
+---
+
+## Model 2: XGBoost
+
+### Cara Kerja
+
+XGBoost adalah algoritma **gradient boosting** yang meningkatkan performa dengan mengurangi kesalahan dari prediksi sebelumnya.  
+**Langkah Kerja**:
+1. Membuat model dasar (tree) untuk memprediksi data.
+2. Menghitung kesalahan dari prediksi sebelumnya (residual).
+3. Membangun tree baru yang difokuskan pada residual untuk meminimalkan kesalahan.
+4. Proses ini diulangi secara iteratif hingga jumlah tree yang ditentukan tercapai.
+
+### Parameter
+
+- **`n_estimators`**: Jumlah pohon yang dibangun (dioptimalkan dengan Optuna).
+- **`learning_rate`**: Mengontrol kontribusi setiap pohon terhadap prediksi akhir (dioptimalkan dengan Optuna).
+- **`max_depth`**: Kedalaman maksimum pohon (dioptimalkan dengan Optuna).
+- **`min_child_weight`**: Kontrol overfitting melalui jumlah minimum bobot leaf (dioptimalkan dengan Optuna).
+- **`subsample`**: Proporsi data pelatihan yang digunakan untuk membangun setiap tree.
+- **`colsample_bytree`**: Proporsi fitur yang digunakan untuk setiap tree.
+- **`gamma`**: Minimum loss reduction untuk membagi node.
+
+### Kelebihan:
+- Performa tinggi pada data kompleks dengan ketidakseimbangan kelas.
+- Mendukung regularisasi untuk mencegah overfitting.
+
+### Kekurangan:
+- Lebih rentan terhadap overfit jika parameter tidak diatur dengan benar.
+- Memerlukan waktu pelatihan lebih lama dibanding Random Forest.
+
+---
+
+## Pemilihan Model Terbaik
+
+- **Kriteria**: Model dipilih berdasarkan **F1-Score** (macro average) karena dataset memiliki kelas tidak seimbang.
+- **Hasil**: XGBoost memiliki **F1-Score** yang lebih tinggi dibandingkan Random Forest setelah proses tuning. Oleh karena itu, **XGBoost** dipilih sebagai model terbaik.
+
+**Rekomendasi**: 
+
+Gunakan **XGBoost** untuk prediksi kualitas udara, terutama jika dataset memiliki ketidakseimbangan kelas dan fitur kompleks.
 
 ---
 
